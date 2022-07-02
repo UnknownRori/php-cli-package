@@ -1,6 +1,6 @@
 {
-    "name": "unknownrori/console",
-    "description": "A simple package for simplified console development",
+    "name": "unknownrori/cli",
+    "description": "A simple package for simplify cli development",
     "type": "library",
     "license": "MIT",
     "scripts": {
