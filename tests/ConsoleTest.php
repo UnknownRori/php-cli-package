@@ -8,7 +8,7 @@ use UnknownRori\Console\Console;
 /**
  * @covers \UnknownRori\Console\Console
  */
-class ConsoleTests extends TestCase
+class ConsoleTest extends TestCase
 {
     /**
      * @test
