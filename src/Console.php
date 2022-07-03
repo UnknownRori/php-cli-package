@@ -52,7 +52,7 @@ class Console
         if (count($argv) > 1) {
             // Todo Run Code
         } else {
-            echo "<Global Flag>\n";
+            echo "Global flag : \n";
             echo "--help, -h \t\t - Show Help\n";
             echo "--quiet, -q \t\t - Stop printing the output\n";
             echo "-v \t\t\t - Show Version\n\n";
@@ -86,16 +86,30 @@ class Console
         }
     }
 
+    // Todo : Improve this code
     private function printCommand(array $commands): void
     {
-        echo "<Command>\n";
+        echo "Command : \n";
+
+        $longestCommand = 0;
+        array_map(function ($command) use (&$longestCommand) {
+            if (strlen($command['title']) > $longestCommand)
+                $longestCommand = strlen($command['title']);
+        }, $commands);
 
         foreach ($commands as $command) {
             $displayArray = [];
             $displayArray[] = $command['title'];
-            for ($i = 0; $i < floor((strlen($command['title']) / 4)); $i++) {
+
+            if (strlen($command['title']) == $longestCommand) {
                 $displayArray[] = "\t";
+            } else {
+                for ($i = 0; $i < ($longestCommand - strlen($command['title'])); $i++) {
+                    $displayArray[] = " ";
+                }
+                $displayArray[]  = "\t";
             }
+
             $displayArray[] = "- {$command['description']}\n";
 
             echo implode('', $displayArray);
