@@ -40,6 +40,7 @@ class Console
         ];
     }
 
+    // Todo : Improve the code
     /**
      * Serve the cli
      * @param array $argv - arguments passed to file
@@ -59,7 +60,13 @@ class Console
             echo "--help, -h \t\t - Show Help\n";
             echo "--quiet, -q \t\t - Stop printing the output\n";
             echo "-v \t\t\t - Show Version\n\n";
-            $this->printCommand($this->commands);
+
+
+            if (is_null($this->commandDisplay)) {
+                $this->printCommand($this->commands);
+            } else {
+                call_user_func($this->commandDisplay, $this->commands);
+            }
         }
     }
 
