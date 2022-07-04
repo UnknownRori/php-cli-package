@@ -14,8 +14,11 @@ class Console
     public string $appVersion     = "0.0-alpha.1";
     public string $fileName       = "Unknown";
     public bool $status           = false;
-    public ?Closure $topHeader    = null;
     public array $commands = [];
+
+    // Customizable behavior
+    public ?Closure $topHeader    = null;
+    public ?Closure $commandDisplay = null;
 
     /**
      * 
