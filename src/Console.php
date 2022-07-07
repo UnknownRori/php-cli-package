@@ -75,7 +75,7 @@ class Console
     public function serve($argv)
     {
         if (!is_array($argv))
-            explode(' ', $argv);
+            $argv = explode(' ', $argv);
 
         $this->fileName = $argv[0];
 
@@ -83,7 +83,7 @@ class Console
             $command = $argv[1];
             $argv = array_slice($argv, 1);
 
-            $this->run($command, $argv);
+            return $this->run($command, $argv);
         } else {
             $this->printTopHeader();
             $this->printCommand($this->commands);
