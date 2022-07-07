@@ -17,15 +17,29 @@ class Console
     public array $commands = [];
 
     // Customizable behavior
-    public ?Closure $topHeader    = null;
-    public ?Closure $commandDisplay = null;
+    protected ?Closure $topHeader    = null;
+    protected ?Closure $commandDisplay = null;
 
     /**
+     * Set the display header using passed function
+     * @param  callable $callback
      * 
+     * @return void
      */
     public function setHeader(callable $callback): void
     {
         $this->topHeader = $callback;
+    }
+
+    /**
+     * Set the display command using passed function, the function should accept the array of command
+     * @param  callable $callback
+     * 
+     * @return void
+     */
+    public function setCommandDisplay(callable $callback): void
+    {
+        $this->commandDisplay = $callback;
     }
 
     /**
