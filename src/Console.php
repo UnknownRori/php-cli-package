@@ -13,12 +13,12 @@ class Console
     public string $appDescription = "A very simple abstracted CLI";
     public string $appVersion     = "0.0-alpha.1";
     public string $fileName       = "Unknown";
-    public bool $status           = false;
     public array $commands = [];
 
     // Customizable behavior
     protected ?Closure $topHeader    = null;
     protected ?Closure $commandDisplay = null;
+    protected bool $verbose = false;
 
     /**
      * Set the display header using passed function
