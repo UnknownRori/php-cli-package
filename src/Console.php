@@ -18,6 +18,7 @@ class Console
     // Customizable behavior
     protected ?Closure $topHeader    = null;
     protected ?Closure $commandDisplay = null;
+    protected ?Closure $titleDisplay = null;
     protected bool $verbose = false;
 
     /**
@@ -40,6 +41,17 @@ class Console
     public function setCommandDisplay(callable $callback): void
     {
         $this->commandDisplay = $callback;
+    }
+
+    /**
+     * Set the title display (the thing always displayed when the cli run)
+     * @param  callable $callback
+     * 
+     * @return void
+     */
+    public function setTitleDisplay(callable $callback): void
+    {
+        $this->titleDisplay = $callback;
     }
 
     /**
@@ -91,8 +103,24 @@ class Console
      */
     private function run(string $command, array $args): mixed
     {
-        echo "Running... \n";
+        $this->printTitleDisplay();
+
         return call_user_func($this->commands[$command]['action'], $args);
+    }
+
+    /**
+     * The default Title Display
+     * 
+     * @return void
+     */
+    private function printTitleDisplay()
+    {
+        if (is_null($this->titleDisplay)) {
+            echo "{$this->appName} - {$this->appVersion}\n";
+            echo "Original Author : UnknownRori\n\n";
+        } else {
+            call_user_func($this->titleDisplay);
+        }
     }
 
     /**
@@ -101,9 +129,8 @@ class Console
      */
     private function printTopHeader(): void
     {
+        $this->printTitleDisplay();
         if (is_null($this->topHeader)) {
-            echo "{$this->appName} - {$this->appVersion}\n";
-            echo "Original Author : UnknownRori\n\n";
             echo "{$this->appDescription}\n\n";
             echo "php {$this->fileName} <command> <flag|arguments>\n";
 
