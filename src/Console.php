@@ -66,15 +66,12 @@ class Console
             explode(' ', $argv);
 
         $this->fileName = $argv[0];
-        $this->printTopHeader();
+
         if (count($argv) > 1) {
             // Todo Run Code
         } else {
-            if (is_null($this->commandDisplay)) {
-                $this->printCommand($this->commands);
-            } else {
-                call_user_func($this->commandDisplay, $this->commands);
-            }
+            $this->printTopHeader();
+            $this->printCommand($this->commands);
         }
     }
 
@@ -107,6 +104,11 @@ class Console
     // Todo : Improve this code
     private function printCommand(array $commands): void
     {
+        if (!is_null($this->commandDisplay)) {
+            call_user_func($this->commandDisplay, $this->commands);
+            return;
+        }
+
         echo "Global flag : \n";
         echo "--help, -h \t\t - Show Help\n";
         echo "--quiet, -q \t\t - Stop printing the output\n";
