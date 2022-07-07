@@ -68,7 +68,10 @@ class Console
         $this->fileName = $argv[0];
 
         if (count($argv) > 1) {
-            // Todo Run Code
+            $command = $argv[1];
+            $argv = array_slice($argv, 1);
+
+            $this->run($command, $argv);
         } else {
             $this->printTopHeader();
             $this->printCommand($this->commands);
@@ -79,6 +82,18 @@ class Console
     /**----------------
      * Private section
      */
+
+    /**
+     * Run the passed command
+     * @param  string $command
+     *
+     * @return mixed
+     */
+    private function run(string $command, array $args): mixed
+    {
+        echo "Running... \n";
+        return call_user_func($this->commands[$command]['action'], $args);
+    }
 
     /**
      * This function will print out the top header of the console
