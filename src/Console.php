@@ -70,12 +70,6 @@ class Console
         if (count($argv) > 1) {
             // Todo Run Code
         } else {
-            echo "Global flag : \n";
-            echo "--help, -h \t\t - Show Help\n";
-            echo "--quiet, -q \t\t - Stop printing the output\n";
-            echo "-v \t\t\t - Show Version\n\n";
-
-
             if (is_null($this->commandDisplay)) {
                 $this->printCommand($this->commands);
             } else {
@@ -113,6 +107,11 @@ class Console
     // Todo : Improve this code
     private function printCommand(array $commands): void
     {
+        echo "Global flag : \n";
+        echo "--help, -h \t\t - Show Help\n";
+        echo "--quiet, -q \t\t - Stop printing the output\n";
+        echo "-v \t\t\t - Show Version\n\n";
+
         echo "Command : \n";
 
         $longestCommand = 0;
