@@ -19,4 +19,18 @@ class ConsoleTest extends TestCase
 
         $this->assertInstanceOf(Console::class, $consoleInstance);
     }
+
+    /**
+     * @test
+     */
+    public function first_command_that_return_1()
+    {
+        $app = new Console();
+        $app->addCommand("test", "it should return 1", function () {
+            return 1;
+        });
+
+        $result =  $app->serve('index.php test');
+        $this->assertEquals(1, $result);
+    }
 }
