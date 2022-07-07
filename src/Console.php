@@ -9,14 +9,14 @@ use Closure;
  */
 class Console
 {
-    public string $appName        = "UnknownRori's CLI";
+    public string $appName = "UnknownRori's CLI";
     public string $appDescription = "A very simple abstracted CLI";
-    public string $appVersion     = "0.0-alpha.1";
-    public string $fileName       = "Unknown";
+    public string $appVersion = "0.0-alpha.1";
+    public string $fileName = "Unknown";
     public array $commands = [];
 
     // Customizable behavior
-    protected ?Closure $topHeader    = null;
+    protected ?Closure $topHeader = null;
     protected ?Closure $commandDisplay = null;
     protected ?Closure $titleDisplay = null;
     protected bool $verbose = false;
@@ -174,7 +174,7 @@ class Console
                 for ($i = 0; $i < ($longestCommand - strlen($command['title'])); $i++) {
                     $displayArray[] = " ";
                 }
-                $displayArray[]  = "\t";
+                $displayArray[] = "\t";
             }
 
             $displayArray[] = "- {$command['description']}\n";
