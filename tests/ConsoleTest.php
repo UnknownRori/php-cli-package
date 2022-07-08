@@ -33,4 +33,32 @@ class ConsoleTest extends TestCase
         $result =  $app->serve('index.php test');
         $this->assertEquals(1, $result);
     }
+
+    /**
+     * @test
+     */
+    public function second_command_sum_two_number()
+    {
+        $app = new Console();
+        $app->addCommand("sum", "it should calculate correctly", function (int $a, int $b) {
+            return $a + $b;
+        });
+
+        $result = $app->serve('index.php sum 1 1');
+        $this->assertEquals(2, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function third_command_sum_two_number()
+    {
+        $app = new Console();
+        $app->addCommand("sum", "it should calculate correctly", function (int $a, int $b) {
+            return $a + $b;
+        });
+
+        $result = $app->serve('index.php sum a=1 b=1');
+        $this->assertEquals(2, $result);
+    }
 }
