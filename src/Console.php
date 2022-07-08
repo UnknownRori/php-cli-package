@@ -3,6 +3,8 @@
 namespace UnknownRori\Console;
 
 use Closure;
+use ReflectionFunction;
+use ReflectionParameter;
 
 /**
  * An abstraction layer for developing cli application in php
@@ -59,8 +61,13 @@ class Console
      */
     public function addCommand(string $key, string $description, callable $callback): void
     {
+        $reflection = new ReflectionFunction($callback);
+        $parameters = $reflection->getParameters();
+
         $this->commands[$key] = [
             'title' => $key,
+            'argumments' => count($parameters),
+            'namedArgumments' => $this->getFunctionArgumments($parameters),
             'description' => $description,
             'action' => $callback
         ];
@@ -106,6 +113,23 @@ class Console
         $this->printTitleDisplay();
 
         return call_user_func($this->commands[$command]['action'], $args);
+    }
+
+    /**
+     * Get the argumments name and type
+     * @param  array<ReflectionParameter> $argumments
+     * 
+     * @return array
+     */
+    private function getFunctionArgumments(array $argumments): array
+    {
+        $argummentsList = [];
+
+        foreach ($argumments as $argumment) {
+            $argummentsList[$argumment->getName()] = (string) $argumment->getType();
+        }
+
+        return $argummentsList;
     }
 
     /**
