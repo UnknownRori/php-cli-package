@@ -15,6 +15,7 @@ class Console
     public string $appDescription = "A very simple abstracted CLI";
     public string $appVersion = "0.0-alpha.1";
     public string $fileName = "Unknown";
+    public static bool $isTitleDisplay = false;
     public array $commands = [];
 
     // Customizable behavior
@@ -105,6 +106,8 @@ class Console
             if (array_key_exists($command, $this->commands)) {
                 return $this->run($command, $argv);
             } else {
+                $this->printTitleDisplay();
+
                 $command = $this->predictCommand($command);
 
                 $userInput = $this->handleConfirmationDisplay($command);
@@ -238,12 +241,17 @@ class Console
      */
     private function printTitleDisplay()
     {
+        if (self::$isTitleDisplay == true)
+            return;
+
         if (is_null($this->titleDisplay)) {
             echo "{$this->appName} - {$this->appVersion}\n";
             echo "Original Author : UnknownRori\n\n";
         } else {
             call_user_func($this->titleDisplay);
         }
+
+        self::$isTitleDisplay = true;
     }
 
     /**
