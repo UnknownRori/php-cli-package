@@ -7,22 +7,22 @@ use ReflectionFunction;
 use ReflectionParameter;
 
 /**
- * An abstraction layer for developing cli application in php
+ * A customizable cli helper class
  */
 class Console
 {
-    public string $appName = "UnknownRori's CLI";
-    public string $appDescription = "A very simple abstracted CLI";
-    public string $appVersion = "0.0-alpha.1";
-    public string $fileName = "Unknown";
-    public static bool $isTitleDisplay = false;
-    public array $commands = [];
+    public string $appName = "UnknownRori's CLI"; //  App name
+    public string $appDescription = "A very simple abstracted CLI"; // App description
+    public string $appVersion = "0.0-alpha.1"; // App version
+    public string $fileName = "Unknown"; // this will be replaced at runtime
+    public static bool $isTitleDisplay = false; // app status if already title display
+    public array $commands = []; // this is where we store the command
 
     // Customizable behavior
-    protected ?Closure $topHeader = null;
-    protected ?Closure $commandDisplay = null;
-    protected ?Closure $titleDisplay = null;
-    protected ?Closure $confirmationDisplay = null;
+    protected ?Closure $topHeader = null; // this is for app running without any argumments
+    protected ?Closure $commandDisplay = null; // this is for displaying command
+    protected ?Closure $titleDisplay = null; // this is for title displaying
+    protected ?Closure $confirmationDisplay = null; // this is for confirmation display
     protected bool $verbose = false;
 
     /**
@@ -59,7 +59,7 @@ class Console
     }
 
     /**
-     * Set the confirmation display, pass the function that accept a single string argumments
+     * Set the confirmation display, pass the function that accept a single string argumments and should return a bool
      * @param  callable $callback
      * 
      * @return void
@@ -70,7 +70,12 @@ class Console
     }
 
     /**
+     * add Command to the app
+     * @param  string   $key
+     * @param  string   $description
+     * @param  callable $callback
      * 
+     * @return void
      */
     public function addCommand(string $key, string $description, callable $callback): void
     {
@@ -128,8 +133,12 @@ class Console
      * Private section
      */
 
-
-    private function handleConfirmationDisplay($command): bool
+    /**
+     * handle the confirmation display
+     * @param  string $command
+     * @return bool
+     */
+    private function handleConfirmationDisplay(string $command): bool
     {
         if (!is_null($this->confirmationDisplay))
             return call_user_func($this->confirmationDisplay, $command);
@@ -143,6 +152,12 @@ class Console
         return false;
     }
 
+    /**
+     * A function use to predict what the user input is mean
+     * @param string $inputCommand
+     * 
+     * @return string
+     */
     private function predictCommand(string $inputCommand): string
     {
         $probabilityCommand = [];
