@@ -21,6 +21,7 @@ class Console
     protected ?Closure $topHeader = null;
     protected ?Closure $commandDisplay = null;
     protected ?Closure $titleDisplay = null;
+    protected ?Closure $confirmationDisplay = null;
     protected bool $verbose = false;
 
     /**
@@ -57,6 +58,17 @@ class Console
     }
 
     /**
+     * Set the confirmation display, pass the function that accept a single string argumments
+     * @param  callable $callback
+     * 
+     * @return void
+     */
+    public function setConfirmationDisplay(callable $callback): void
+    {
+        $this->confirmationDisplay = $callback;
+    }
+
+    /**
      * 
      */
     public function addCommand(string $key, string $description, callable $callback): void
@@ -90,7 +102,18 @@ class Console
             $command = $argv[1];
             $argv = $this->parseArgumments($argv);
 
-            return $this->run($command, $argv);
+            if (array_key_exists($command, $this->commands)) {
+                return $this->run($command, $argv);
+            } else {
+                $command = $this->predictCommand($command);
+
+                $userInput = $this->handleConfirmationDisplay($command);
+
+                if ($userInput) {
+                    echo "\n";
+                    return $this->run($command, $argv);
+                }
+            }
         } else {
             $this->printTopHeader();
             $this->printCommand($this->commands);
@@ -101,6 +124,50 @@ class Console
     /**----------------
      * Private section
      */
+
+
+    private function handleConfirmationDisplay($command): bool
+    {
+        if (!is_null($this->confirmationDisplay))
+            return call_user_func($this->confirmationDisplay, $command);
+
+        echo "Did you mean '{$command}' ";
+        $userInput = readline("Y/n :");
+
+        if ($userInput == "Y")
+            return true;
+
+        return false;
+    }
+
+    private function predictCommand(string $inputCommand): string
+    {
+        $probabilityCommand = [];
+
+        foreach ($this->commands as $command) {
+            $percentage = 0;
+            $similarity = strlen($command['title']) - similar_text($command['title'], $inputCommand, $percentage);
+            $probabilityCommand[] = ['percentage' => $percentage, 'similarity' => $similarity, 'command' => $command['title']];
+        }
+
+        $percentage = 0.0;
+        $similarity = 0;
+        $outCommand = '';
+
+        foreach ($probabilityCommand as $command) {
+            if ($command['percentage'] >= $percentage) {
+                $percentage = $command['percentage'];
+                $similarity = $command['similarity'];
+                $outCommand = $command['command'];
+            }
+        }
+
+        if ($outCommand != '')
+            return $outCommand;
+
+        echo "Invalid command!";
+        exit(0);
+    }
 
     /**
      * Parse the passed argumments in the console
