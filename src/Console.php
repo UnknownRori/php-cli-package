@@ -15,7 +15,7 @@ class Console
     public string $appDescription = "A very simple abstracted CLI"; // App description
     public string $appVersion = "0.0-alpha.1"; // App version
     public string $fileName = "Unknown"; // this will be replaced at runtime
-    public static bool $isTitleDisplay = false; // app status if already title display
+    public bool $isTitleDisplay = false; // app status if already title display
     public array $commands = []; // this is where we store the command
 
     // Customizable behavior
@@ -256,7 +256,7 @@ class Console
      */
     private function printTitleDisplay()
     {
-        if (self::$isTitleDisplay == true)
+        if ($this->isTitleDisplay == true)
             return;
 
         if (is_null($this->titleDisplay)) {
@@ -266,7 +266,7 @@ class Console
             call_user_func($this->titleDisplay);
         }
 
-        self::$isTitleDisplay = true;
+        $this->isTitleDisplay = true;
     }
 
     /**
