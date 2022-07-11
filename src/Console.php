@@ -88,7 +88,7 @@ class Console
 
         if (count($argv) > 1) {
             $command = $argv[1];
-            $argv = array_slice($argv, 1);
+            $argv = $this->parseArgumments($argv);
 
             return $this->run($command, $argv);
         } else {
@@ -103,16 +103,48 @@ class Console
      */
 
     /**
+     * Parse the passed argumments in the console
+     * @param  array<string> $argv
+     * @return array
+     */
+    private function parseArgumments(array $argv): array
+    {
+        // TODO! Refator this
+        if (count($argv) <= 1)
+            return [];
+
+        $argv = array_slice($argv, 2);
+
+        for ($i = 0; $i < count($argv); $i++) {
+            $parse = explode('=', $argv[$i]);
+            if (count($parse) > 1) {
+                $argv[$parse[0]] = $parse[1];
+                unset($argv[$i]);
+            }
+        }
+
+        return $argv;
+    }
+
+    /**
      * Run the passed command
      * @param  string $command
      *
      * @return mixed
      */
-    private function run(string $command, array $args): mixed
+    private function run(string $command, array $args)
     {
+        // TODO! Refator this
         $this->printTitleDisplay();
 
-        return call_user_func($this->commands[$command]['action'], $args);
+        $commandArgummentsCount = $this->commands[$command]['argumments'];
+
+        if (count($args) == $commandArgummentsCount)
+            return call_user_func($this->commands[$command]['action'], ...$args);
+        else if (count($args) < $commandArgummentsCount)
+            echo "Insufficient argumments \n";
+        else
+            echo "Too many argumments \n";
     }
 
     /**
