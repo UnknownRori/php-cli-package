@@ -309,8 +309,8 @@ class Console
                 $longestCommand = strlen($command['title']);
         }, $commands);
 
+        $displayArray = [];
         foreach ($commands as $command) {
-            $displayArray = [];
             $displayArray[] = "\e[32m{$command['title']}\e[0m";
 
             if (strlen($command['title']) == $longestCommand) {
@@ -323,8 +323,8 @@ class Console
             }
 
             $displayArray[] = "- \e[1m{$command['description']}\e[0m\n";
-
-            echo implode('', $displayArray);
         }
+
+        echo implode('', $displayArray);
     }
 }
