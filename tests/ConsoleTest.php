@@ -61,4 +61,29 @@ class ConsoleTest extends TestCase
         $result = $app->serve('index.php sum a=1 b=1');
         $this->assertEquals(2, $result);
     }
+
+    /**
+     * @test
+     */
+    public function first_string_concat_command()
+    {
+        $app = new Console();
+        $app->addCommand('concat', 'it should concatenate a string', function (string $a, string $b) {
+            return "{$a} {$b}";
+        });
+
+        $result = $app->serve('index.php concat a=Hello, b=World!');
+        $this->assertEquals("Hello, World!", $result);
+    }
+
+    public function second_string_concat_command()
+    {
+        $app = new Console();
+        $app->addCommand('concat', 'it should concatenate a string', function (string $a, string $b) {
+            return "{$a} {$b}";
+        });
+
+        $result = $app->serve('index.php concat b=World! a=Hello,');
+        $this->assertEquals("Hello, World!", $result);
+    }
 }
