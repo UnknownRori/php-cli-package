@@ -111,7 +111,7 @@ class Console
             if (array_key_exists($command, $this->commands)) {
                 return $this->run($command, $argv);
             } else {
-                $this->printTitleDisplay();
+                $this->handleTitleDisplay();
 
                 $command = $this->predictCommand($command);
 
@@ -121,8 +121,8 @@ class Console
                     return $this->run($command, $argv);
             }
         } else {
-            $this->printTopHeader();
-            $this->printCommand($this->commands);
+            $this->handleTopHeaderDisplay();
+            $this->handleCommandDisplay($this->commands);
         }
     }
 
@@ -134,6 +134,7 @@ class Console
     /**
      * handle the confirmation display
      * @param  string $command
+     * 
      * @return bool
      */
     private function handleConfirmationDisplay(string $command): bool
@@ -187,12 +188,12 @@ class Console
 
     /**
      * Parse the passed argumments in the console
-     * @param  array<string> $argv
-     * @return array
+     * @param  array<string,int> $argv
+     * @return array<string,int>
      */
     private function parseArgumments(array $argv): array
     {
-        // TODO! Refator this
+        // TODO! Refactor this
         if (count($argv) <= 1)
             return [];
 
@@ -200,6 +201,7 @@ class Console
 
         for ($i = 0; $i < count($argv); $i++) {
             $parse = explode('=', $argv[$i]);
+
             if (count($parse) > 1) {
                 $argv[$parse[0]] = $parse[1];
                 unset($argv[$i]);
@@ -211,14 +213,15 @@ class Console
 
     /**
      * Run the passed command
-     * @param  string $command
-     *
+     * @param  string               $command
+     * @param  array<string,int>    $args
+     * 
      * @return mixed
      */
     private function run(string $command, array $args)
     {
-        // TODO! Refator this
-        $this->printTitleDisplay();
+        // TODO! Refactor this
+        $this->handleTitleDisplay();
 
         $commandArgummentsCount = $this->commands[$command]['argumments'];
 
@@ -253,7 +256,7 @@ class Console
      * 
      * @return void
      */
-    private function printTitleDisplay()
+    private function handleTitleDisplay()
     {
         if ($this->isTitleDisplay == true)
             return;
@@ -269,11 +272,13 @@ class Console
 
     /**
      * This function will print out the top header of the console
+     * 
      * @return void
      */
-    private function printTopHeader(): void
+    private function handleTopHeaderDisplay(): void
     {
-        $this->printTitleDisplay();
+        $this->handleTitleDisplay();
+
         if (is_null($this->topHeader)) {
             echo "{$this->appDescription}\n\n";
             echo "\e[1;32mphp\e[0m \e[1;32m{$this->fileName}\e[0m \e[33m<command> <flag|arguments>\e[0m\n";
@@ -288,7 +293,7 @@ class Console
     }
 
     // Todo : Improve this code
-    private function printCommand(array $commands): void
+    private function handleCommandDisplay(array $commands): void
     {
         if (!is_null($this->commandDisplay)) {
             call_user_func($this->commandDisplay, $this->commands);
