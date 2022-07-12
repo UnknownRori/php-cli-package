@@ -143,8 +143,8 @@ class Console
         if (!is_null($this->confirmationDisplay))
             return call_user_func($this->confirmationDisplay, $command);
 
-        echo "Did you mean '{$command}' ";
-        $userInput = readline("Y/n :");
+        echo "Did you mean \e[32m{$command}\e[0m?\n";
+        $userInput = readline("y/N :");
 
         if ($userInput == "Y")
             return true;
@@ -260,8 +260,7 @@ class Console
             return;
 
         if (is_null($this->titleDisplay)) {
-            echo "{$this->appName} - {$this->appVersion}\n";
-            echo "Original Author : UnknownRori\n\n";
+            echo "\e[1m{$this->appName}\e[0m - \e[1;32m{$this->appVersion}\e[0m\n";
         } else {
             call_user_func($this->titleDisplay);
         }
@@ -278,7 +277,7 @@ class Console
         $this->printTitleDisplay();
         if (is_null($this->topHeader)) {
             echo "{$this->appDescription}\n\n";
-            echo "php {$this->fileName} <command> <flag|arguments>\n";
+            echo "\e[1;32mphp\e[0m \e[1;32m{$this->fileName}\e[0m \e[33m<command> <flag|arguments>\e[0m\n";
 
             for ($i = 0; $i < 40; $i++) {
                 echo "-";
@@ -297,12 +296,12 @@ class Console
             return;
         }
 
-        echo "Global flag : \n";
-        echo "--help, -h \t\t - Show Help\n";
-        echo "--quiet, -q \t\t - Stop printing the output\n";
-        echo "-v \t\t\t - Show Version\n\n";
+        echo "\e[33mGlobal flag :\e[0m \n";
+        echo "\e[32m--help, -h\e[0m \t\t - \e[1mShow Help\e[0m\n";
+        echo "\e[32m--quiet, -q\e[0m \t\t - \e[1mStop printing the output\e[0m\n";
+        echo "\e[32m-V\e[0m \t\t\t - \e[1mShow Version\e[0m\n\n";
 
-        echo "Command : \n";
+        echo "\e[33mCommand :\e[0m \n";
 
         $longestCommand = 0;
         array_map(function ($command) use (&$longestCommand) {
@@ -312,7 +311,7 @@ class Console
 
         foreach ($commands as $command) {
             $displayArray = [];
-            $displayArray[] = $command['title'];
+            $displayArray[] = "\e[32m{$command['title']}\e[0m";
 
             if (strlen($command['title']) == $longestCommand) {
                 $displayArray[] = "\t";
@@ -323,7 +322,7 @@ class Console
                 $displayArray[] = "\t";
             }
 
-            $displayArray[] = "- {$command['description']}\n";
+            $displayArray[] = "- \e[1m{$command['description']}\e[0m\n";
 
             echo implode('', $displayArray);
         }
