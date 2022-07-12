@@ -146,7 +146,7 @@ class Console
         echo "Did you mean \e[32m{$command}\e[0m?\n";
         $userInput = readline("y/N :");
 
-        if ($userInput == "Y")
+        if ($userInput == "Y" || $userInput == "y")
             return true;
 
         return false;
