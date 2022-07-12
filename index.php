@@ -8,13 +8,14 @@ $console = new Console();
 $console->addCommand('test', "It's working", function () {
     echo "it work";
 });
-$console->addCommand('make:seeder', "It's working", function () {
-    echo "it work";
+$console->addCommand('sum', "It's working", function (float $a, float $b) {
+    echo $a + $b;
 });
-$console->addCommand('make:seeder:another:long', "It's working", function () {
-    echo "it work";
+$console->addCommand('concat', "It's working", function (string $a, string $b) {
+    echo $a . $b;
 });
-$console->addCommand('make:seeder:long:long:command', "It's working", function () {
-    echo "it work";
+$console->addCommand('div', "It's working", function (float $a, float $b) {
+    echo $a / $b;
 });
+
 $console->serve($argv);
