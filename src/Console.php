@@ -117,10 +117,8 @@ class Console
 
                 $userInput = $this->handleConfirmationDisplay($command);
 
-                if ($userInput) {
-                    echo "\n";
+                if ($userInput)
                     return $this->run($command, $argv);
-                }
             }
         } else {
             $this->printTopHeader();
@@ -224,9 +222,10 @@ class Console
 
         $commandArgummentsCount = $this->commands[$command]['argumments'];
 
-        if (count($args) == $commandArgummentsCount)
+        if (count($args) == $commandArgummentsCount) {
+            echo "\n";
             return call_user_func($this->commands[$command]['action'], ...$args);
-        else if (count($args) < $commandArgummentsCount)
+        } else if (count($args) < $commandArgummentsCount)
             echo "Insufficient argumments \n";
         else
             echo "Too many argumments \n";
