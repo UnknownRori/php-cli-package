@@ -316,16 +316,17 @@ class Console
                 return null;
             }
         }
+
         $reflectionFunction = new ReflectionFunction($this->commands[$input['command']]['action']);
         $reflectionParam = $reflectionFunction->getParameters();
         $param = $this->getFunctionArgumments($reflectionParam);
 
-        if (count($param) <= count($input['argumments'])) {
-            return call_user_func($this->commands[$input['command']]['action'], ...$input['argumments']);
-        } else {
-            echo "\nToo little argumments";
+        if (count($param) > count($input['argumments'])) {
+            echo "Too little argumments\n";
             return null;
         }
+
+        return call_user_func($this->commands[$input['command']]['action'], ...$input['argumments']);
     }
 
     /**
