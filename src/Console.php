@@ -305,44 +305,13 @@ class Console
      */
     protected function call(array $input): mixed
     {
-        if (!array_key_exists($input['command'], $this->commands)) {
-            $input['command'] = $this->predictCommand($input['command']);
-
-            echo "\n";
-
-            $result = $this->confirmationHandler($this->predictCommand($input['command']));
-
-            echo "\n";
-            if (!$result) {
-                echo "Invalid Command";
-                return null;
-            }
-        }
+        $this->checkInputCommandExist($input);
 
         $commandFunction = $this->commands[$input['command']]['action'];
-        $flagActionQueue = [];
 
-        array_filter($input['flag'], function (string $flag) use (&$input, &$commandFunction, &$flagActionQueue) {
-            if (array_key_exists($flag, $this->commands[$input['command']]['flag'])) {
-                switch ($this->commands[$input['command']]['flag'][$flag]['type']) {
-                    case self::FLAG_BEFORE:
-                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action']);
-                        break;
-                    case self::FLAG_OVERIDE:
-                        $commandFunction = $this->commands[$input['command']]['flag'][$flag]['action'];
-                        break;
-                    case self::FLAG_AFTER:
-                        $flagActionQueue[] = $this->commands[$input['command']]['flag'][$flag]['action'];
-                        break;
-                }
-            }
-        });
+        $flagActionQueue = $this->filterFlagInput($input, $commandFunction);
 
-        $reflectionFunction = new ReflectionFunction($commandFunction);
-        $reflectionParam = $reflectionFunction->getParameters();
-        $param = $this->getFunctionArgumments($reflectionParam);
-
-        if (count($param) > count($input['argumments'])) {
+        if (!$this->isArgummentsSatisfied($commandFunction, count($input['argumments']))) {
             echo "Too little argumments\n";
             return null;
         }
@@ -404,5 +373,77 @@ class Console
         }
 
         return $argummentsList;
+    }
+
+    /**
+     * Check the passed string if exist in command list if it doesn't exist trigger `predictCommand` method
+     * @param string $command
+     * 
+     * @return void
+     */
+    protected function checkInputCommandExist(array &$input): void
+    {
+        if (!array_key_exists($input['command'], $this->commands)) {
+            $input['command'] = $this->predictCommand($input['command']);
+
+            echo "\n";
+
+            $result = $this->confirmationHandler($this->predictCommand($input['command']));
+
+            echo "\n";
+            if (!$result) {
+                echo "Invalid Command";
+            }
+        }
+    }
+
+    /**
+     * Check if the passed argumments count satisfy the passed closure
+     * @param  Closure  $action
+     * @param  int      $argummentsCurrentlyPassed
+     * 
+     * @return bool
+     */
+    protected function isArgummentsSatisfied(Closure $action, int $argummentsCurrentlyPassed): bool
+    {
+        $reflectionFunction = new ReflectionFunction($action);
+        $reflectionParam = $reflectionFunction->getParameters();
+        $param = $this->getFunctionArgumments($reflectionParam);
+
+        if (count($param) > $argummentsCurrentlyPassed) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Filter the passed flag in input and run specific type of the flag and return queued flag
+     * @param  array   $input
+     * @param  Closure $commandFunction
+     * 
+     * @return array
+     */
+    protected function filterFlagInput(array &$input, Closure &$commandFunction): array
+    {
+        $flagActionQueue = [];
+
+        array_filter($input['flag'], function (string $flag) use (&$input, &$commandFunction, &$flagActionQueue) {
+            if (array_key_exists($flag, $this->commands[$input['command']]['flag'])) {
+                switch ($this->commands[$input['command']]['flag'][$flag]['type']) {
+                    case self::FLAG_BEFORE:
+                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action']);
+                        break;
+                    case self::FLAG_OVERIDE:
+                        $commandFunction = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                    case self::FLAG_AFTER:
+                        $flagActionQueue[] = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                }
+            }
+        });
+
+        return $flagActionQueue;
     }
 }
