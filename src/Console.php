@@ -7,8 +7,11 @@ use ReflectionFunction;
 
 class Console
 {
+    // Run the flag action before the command is triggered
     const FLAG_BEFORE = 0;
+    // Run the flag action after the command is triggered
     const FLAG_AFTER = 1;
+    // Overide the current command action
     const FLAG_OVERIDE = 2;
 
     // Console name
@@ -302,7 +305,6 @@ class Console
      */
     protected function call(array $input): mixed
     {
-
         if (!array_key_exists($input['command'], $this->commands)) {
             $input['command'] = $this->predictCommand($input['command']);
 
@@ -317,7 +319,26 @@ class Console
             }
         }
 
-        $reflectionFunction = new ReflectionFunction($this->commands[$input['command']]['action']);
+        $commandFunction = $this->commands[$input['command']]['action'];
+        $flagActionQueue = [];
+
+        array_filter($input['flag'], function (string $flag) use (&$input, &$commandFunction, &$flagActionQueue) {
+            if (array_key_exists($flag, $this->commands[$input['command']]['flag'])) {
+                switch ($this->commands[$input['command']]['flag'][$flag]['type']) {
+                    case self::FLAG_BEFORE:
+                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action']);
+                        break;
+                    case self::FLAG_OVERIDE:
+                        $commandFunction = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                    case self::FLAG_AFTER:
+                        $flagActionQueue[] = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                }
+            }
+        });
+
+        $reflectionFunction = new ReflectionFunction($commandFunction);
         $reflectionParam = $reflectionFunction->getParameters();
         $param = $this->getFunctionArgumments($reflectionParam);
 
@@ -326,7 +347,13 @@ class Console
             return null;
         }
 
-        return call_user_func($this->commands[$input['command']]['action'], ...$input['argumments']);
+        $out = call_user_func($commandFunction, ...$input['argumments']);
+
+        array_map(function (Closure $action) {
+            call_user_func($action);
+        }, $flagActionQueue);
+
+        return $out;
     }
 
     /**
