@@ -33,6 +33,8 @@ class Console
     protected ?Closure $titleDisplay = null;
     // this is for confirmation display
     protected ?Closure $confirmationDisplay = null;
+    // this is for displaying help on specific command
+    protected ?Closure $commandHelpDisplay = null;
     // console setting for verbose output
     protected bool $verbose = false;
 
@@ -255,6 +257,80 @@ class Console
         echo implode('', $displayArray);
     }
 
+    /**
+     * Handle a `--help` flag on specific command
+     * @param  array  $command
+     * 
+     * @return void
+     */
+    protected function commandHelpDisplayHandler(array $meta, string $name): void
+    {
+        if (!is_null($this->commandHelpDisplay))
+            return call_user_func($this->commandHelpDisplay, $meta, $name);
+
+        $reflectionFunction = new ReflectionFunction($meta['action']);
+        $reflectionParam = $reflectionFunction->getParameters();
+        $param = $this->getFunctionArgumments($reflectionParam);
+
+        echo "\n";
+        echo "\e[32mphp\e[0m \e[32m{$this->fileName}\e[0m \e[1;33m{$name} \e[0;33m<flag|arguments>\e[0m\n";
+
+        echo "\e[1m{$meta['description']}\e[0m\n\n";
+        echo "\e[33mArgumments : \e[0m\n";
+
+        $longestCommand = 0;
+        array_filter($param, function (string $argumments) use (&$longestCommand) {
+            if (strlen($argumments) > $longestCommand)
+                $longestCommand = strlen($argumments);
+        });
+
+        $displayArray = [];
+
+        array_filter($param, function (string $key, string $argumments) use (&$longestCommand, &$displayArray) {
+            $displayArray[] = "\e[32m{$argumments}\e[0m";
+
+            if (strlen($argumments) == $longestCommand) {
+                $displayArray[] = "\t";
+            } else {
+                for ($i = 0; $i < ($longestCommand - strlen($argumments)); $i++) {
+                    $displayArray[] = " ";
+                }
+                $displayArray[] = "\t";
+            }
+
+            $displayArray[] = "- \e[1m{$key}\e[0m\n";
+        }, ARRAY_FILTER_USE_BOTH);
+
+        echo implode('', $displayArray) . "\n";
+
+        echo "\e[33mFlag : \e[0m\n";
+
+        $longestCommand = 0;
+        array_filter($meta['flag'], function (array $flag, string $key) use (&$longestCommand) {
+            if (strlen($key) > $longestCommand)
+                $longestCommand = strlen($key);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $displayArray = [];
+
+        array_filter($meta['flag'], function (array $flag, string $key) use (&$longestCommand, &$displayArray) {
+            $displayArray[] = "\e[32m{$key}\e[0m";
+
+            if (strlen($key) == $longestCommand) {
+                $displayArray[] = "\t";
+            } else {
+                for ($i = 0; $i < ($longestCommand - strlen($key)); $i++) {
+                    $displayArray[] = " ";
+                }
+                $displayArray[] = "\t";
+            }
+
+            $displayArray[] = "- \e[1m{$flag['description']}\e[0m\n";
+        }, ARRAY_FILTER_USE_BOTH);
+
+        echo implode('', $displayArray);
+    }
+
     // Console Logic
 
     /**
@@ -307,6 +383,11 @@ class Console
     protected function call(array $input): mixed
     {
         $this->checkInputCommandExist($input);
+
+        if (array_search('help', $input['flag']) >= 0 || array_search('h', $input['flag'])) {
+            $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
+        }
+
 
         $commandFunction = $this->commands[$input['command']]['action'];
 
