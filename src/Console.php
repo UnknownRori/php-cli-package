@@ -265,8 +265,10 @@ class Console
      */
     protected function commandHelpDisplayHandler(array $meta, string $name): void
     {
-        if (!is_null($this->commandHelpDisplay))
-            return call_user_func($this->commandHelpDisplay, $meta, $name);
+        if (!is_null($this->commandHelpDisplay)) {
+            call_user_func($this->commandHelpDisplay, $meta, $name);
+            return;
+        }
 
         $reflectionFunction = new ReflectionFunction($meta['action']);
         $reflectionParam = $reflectionFunction->getParameters();
@@ -329,6 +331,8 @@ class Console
         }, ARRAY_FILTER_USE_BOTH);
 
         echo implode('', $displayArray);
+
+        return;
     }
 
     // Console Logic
@@ -385,7 +389,7 @@ class Console
         $this->checkInputCommandExist($input);
 
         if (array_search('help', $input['flag']) >= 0 || array_search('h', $input['flag'])) {
-            $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
+            return $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
         }
 
 
