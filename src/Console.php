@@ -22,6 +22,8 @@ class Console
     public string $appVersion = "0.0-alpha.1";
     // this will be replaced at runtime
     public string $fileName = "Unknown";
+    // this is where we store the command
+    public array $commands = [];
 
     // this is for app running without any argumments
     protected ?Closure $topHeader = null;
@@ -36,8 +38,6 @@ class Console
 
     // app status if already title display
     protected bool $isAlreadyDisplayTitle = false;
-    // this is where we store the command
-    private array $commands = [];
 
     /**
      * Set the display header using passed function
