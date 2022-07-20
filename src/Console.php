@@ -109,11 +109,12 @@ class Console
      * 
      * @return void
      */
-    public function addFlag(string $commandKey, string $key, int $type, callable $callback): void
+    public function addFlag(string $commandKey, string $key, string $description, int $type, callable $callback): void
     {
         if (array_key_exists($commandKey, $this->commands)) {
             $this->commands[$commandKey]['flag'][$key] = [
                 'type' => $type,
+                'description' => $description,
                 'action' => $callback,
             ];
         }
