@@ -4,26 +4,42 @@ namespace UnknownRori\Console;
 
 use Closure;
 use ReflectionFunction;
-use ReflectionParameter;
 
-/**
- * A customizable cli helper class
- */
 class Console
 {
-    public string $appName = "UnknownRori's CLI"; //  App name
-    public string $appDescription = "A very simple abstracted CLI"; // App description
-    public string $appVersion = "0.0-alpha.1"; // App version
-    public string $fileName = "Unknown"; // this will be replaced at runtime
-    public bool $isTitleDisplay = false; // app status if already title display
-    public array $commands = []; // this is where we store the command
+    // Run the flag action before the command is triggered
+    const FLAG_BEFORE = 0;
+    // Run the flag action after the command is triggered
+    const FLAG_AFTER = 1;
+    // Overide the current command action
+    const FLAG_OVERIDE = 2;
 
-    // Customizable behavior
-    protected ?Closure $topHeader = null; // this is for app running without any argumments
-    protected ?Closure $commandDisplay = null; // this is for displaying command
-    protected ?Closure $titleDisplay = null; // this is for title displaying
-    protected ?Closure $confirmationDisplay = null; // this is for confirmation display
+    // Console name
+    public string $appName = "UnknownRori's CLI";
+    // App description
+    public string $appDescription = "A very simple abstracted CLI";
+    // App version
+    public string $appVersion = "0.0-alpha.1";
+    // this will be replaced at runtime
+    public string $fileName = "Unknown";
+    // this is where we store the command
+    public array $commands = [];
+
+    // this is for app running without any argumments
+    protected ?Closure $topHeader = null;
+    // this is for displaying command
+    protected ?Closure $commandDisplay = null;
+    // this is for title displaying
+    protected ?Closure $titleDisplay = null;
+    // this is for confirmation display
+    protected ?Closure $confirmationDisplay = null;
+    // this is for displaying help on specific command
+    protected ?Closure $commandHelpDisplay = null;
+    // console setting for verbose output
     protected bool $verbose = false;
+
+    // app status if already title display
+    protected bool $isAlreadyDisplayTitle = false;
 
     /**
      * Set the display header using passed function
@@ -70,66 +86,69 @@ class Console
     }
 
     /**
-     * add Command to the app
-     * @param  string   $key
-     * @param  string   $description
-     * @param  callable $callback
+     * Add command on specific key
+     * @param  string   $key         - Command key
+     * @param  string   $description - Command description
+     * @param  callable $callback    - Action
      * 
      * @return void
      */
     public function addCommand(string $key, string $description, callable $callback): void
     {
-        $reflection = new ReflectionFunction($callback);
-        $parameters = $reflection->getParameters();
-
         $this->commands[$key] = [
-            'title' => $key,
-            'argumments' => count($parameters),
-            'namedArgumments' => $this->getFunctionArgumments($parameters),
             'description' => $description,
-            'action' => $callback
+            'action' => $callback,
+            'flag' => [],
         ];
     }
 
-    // Todo : Improve the code
     /**
-     * Serve the cli
-     * @param array $argv - arguments passed to file
-     * @return mixed
+     * Add flag on the specific command key
+     * @param  string   $commandKey - Command Key that registered using `addCommand` method
+     * @param  string   $key        - Flag Key
+     * @param  int      $type       - Flag Type
+     * @param  callable $callback   - Action
+     * 
+     * @return void
      */
-    public function serve($argv)
+    public function addFlag(string $commandKey, string $key, string $description, int $type, callable $callback): void
     {
-        if (!is_array($argv))
-            $argv = explode(' ', $argv);
-
-        $this->fileName = $argv[0];
-
-        if (count($argv) > 1) {
-            $command = $argv[1];
-            $argv = $this->parseArgumments($argv);
-
-            if (array_key_exists($command, $this->commands)) {
-                return $this->run($command, $argv);
-            } else {
-                $this->handleTitleDisplay();
-
-                $command = $this->predictCommand($command);
-
-                $userInput = $this->handleConfirmationDisplay($command);
-
-                if ($userInput)
-                    return $this->run($command, $argv);
-            }
-        } else {
-            $this->handleTopHeaderDisplay();
-            $this->handleCommandDisplay($this->commands);
+        if (array_key_exists($commandKey, $this->commands)) {
+            $this->commands[$commandKey]['flag'][$key] = [
+                'type' => $type,
+                'description' => $description,
+                'action' => $callback,
+            ];
         }
     }
 
-
-    /**----------------
-     * Private section
+    /**
+     * Serving the cli
+     * @param string|array  $argumments - passed data from $argv
+     * 
+     * @return mixed
      */
+    public function serve($argumments): mixed
+    {
+        if (!is_array($argumments))
+            $argumments = explode(' ', $argumments);
+
+
+        $argumments = $this->parseUserInput($argumments);
+
+        if (!is_null($argumments['command'])) {
+            $this->titleDisplayHandler();
+
+            return $this->call($argumments);
+        } else {
+            $this->topHeaderHandler();
+            $this->commandDisplayHandler($this->commands);
+
+            return null;
+        }
+    }
+
+    // Customizable Logic
 
     /**
      * handle the confirmation display
@@ -137,7 +156,7 @@ class Console
      * 
      * @return bool
      */
-    private function handleConfirmationDisplay(string $command): bool
+    protected function confirmationHandler(string $command): bool
     {
         if (!is_null($this->confirmationDisplay))
             return call_user_func($this->confirmationDisplay, $command);
@@ -152,113 +171,13 @@ class Console
     }
 
     /**
-     * A function use to predict what the user input is mean
-     * @param string $inputCommand
-     * 
-     * @return string
-     */
-    private function predictCommand(string $inputCommand): string
-    {
-        $probabilityCommand = [];
-
-        foreach ($this->commands as $command) {
-            $percentage = 0;
-            $similarity = strlen($command['title']) - similar_text($command['title'], $inputCommand, $percentage);
-            $probabilityCommand[] = ['percentage' => $percentage, 'similarity' => $similarity, 'command' => $command['title']];
-        }
-
-        $percentage = 0.0;
-        $similarity = 0;
-        $outCommand = '';
-
-        foreach ($probabilityCommand as $command) {
-            if ($command['percentage'] >= $percentage) {
-                $percentage = $command['percentage'];
-                $similarity = $command['similarity'];
-                $outCommand = $command['command'];
-            }
-        }
-
-        if ($outCommand != '')
-            return $outCommand;
-
-        echo "Invalid command!";
-        exit(0);
-    }
-
-    /**
-     * Parse the passed argumments in the console
-     * @param  array<string,int> $argv
-     * @return array<string,int>
-     */
-    private function parseArgumments(array $argv): array
-    {
-        // TODO! Refactor this
-        if (count($argv) <= 1)
-            return [];
-
-        $argv = array_slice($argv, 2);
-
-        for ($i = 0; $i < count($argv); $i++) {
-            $parse = explode('=', $argv[$i]);
-
-            if (count($parse) > 1) {
-                $argv[$parse[0]] = $parse[1];
-                unset($argv[$i]);
-            }
-        }
-
-        return $argv;
-    }
-
-    /**
-     * Run the passed command
-     * @param  string               $command
-     * @param  array<string,int>    $args
-     * 
-     * @return mixed
-     */
-    private function run(string $command, array $args)
-    {
-        // TODO! Refactor this
-        $this->handleTitleDisplay();
-
-        $commandArgummentsCount = $this->commands[$command]['argumments'];
-
-        if (count($args) == $commandArgummentsCount) {
-            echo "\n";
-            return call_user_func($this->commands[$command]['action'], ...$args);
-        } else if (count($args) < $commandArgummentsCount)
-            echo "Insufficient argumments \n";
-        else
-            echo "Too many argumments \n";
-    }
-
-    /**
-     * Get the argumments name and type
-     * @param  array<ReflectionParameter> $argumments
-     * 
-     * @return array
-     */
-    private function getFunctionArgumments(array $argumments): array
-    {
-        $argummentsList = [];
-
-        foreach ($argumments as $argumment) {
-            $argummentsList[$argumment->getName()] = (string) $argumment->getType();
-        }
-
-        return $argummentsList;
-    }
-
-    /**
      * The default Title Display
      * 
      * @return void
      */
-    private function handleTitleDisplay()
+    protected function titleDisplayHandler()
     {
-        if ($this->isTitleDisplay == true)
+        if ($this->isAlreadyDisplayTitle == true)
             return;
 
         if (is_null($this->titleDisplay)) {
@@ -267,17 +186,18 @@ class Console
             call_user_func($this->titleDisplay);
         }
 
-        $this->isTitleDisplay = true;
+        $this->isAlreadyDisplayTitle = true;
     }
 
     /**
-     * This function will print out the top header of the console
+     * Handler for top header
      * 
      * @return void
      */
-    private function handleTopHeaderDisplay(): void
+
+    protected function topHeaderHandler(): void
     {
-        $this->handleTitleDisplay();
+        $this->titleDisplayHandler();
 
         if (is_null($this->topHeader)) {
             echo "{$this->appDescription}\n\n";
@@ -292,43 +212,324 @@ class Console
         }
     }
 
-    // Todo : Improve this code
-    private function handleCommandDisplay(array $commands): void
+    /**
+     * Handler for command display
+     * 
+     * @return void
+     */
+    protected function commandDisplayHandler(array $commands): void
     {
         if (!is_null($this->commandDisplay)) {
             call_user_func($this->commandDisplay, $this->commands);
             return;
         }
 
-        echo "\e[33mGlobal flag :\e[0m \n";
-        echo "\e[32m--help, -h\e[0m \t\t - \e[1mShow Help\e[0m\n";
-        echo "\e[32m--quiet, -q\e[0m \t\t - \e[1mStop printing the output\e[0m\n";
-        echo "\e[32m-V\e[0m \t\t\t - \e[1mShow Version\e[0m\n\n";
+        // echo "\e[33mGlobal flag :\e[0m \n";
+        // echo "\e[32m--help, -h\e[0m \t\t - \e[1mShow Help\e[0m\n";
+        // echo "\e[32m--quiet, -q\e[0m \t\t - \e[1mStop printing the output\e[0m\n";
+        // echo "\e[32m-V\e[0m \t\t\t - \e[1mShow Version\e[0m\n\n";
 
         echo "\e[33mCommand :\e[0m \n";
 
         $longestCommand = 0;
-        array_map(function ($command) use (&$longestCommand) {
-            if (strlen($command['title']) > $longestCommand)
-                $longestCommand = strlen($command['title']);
-        }, $commands);
+        array_filter($commands, function (array $command, string $key) use (&$longestCommand) {
+            if (strlen($key) > $longestCommand)
+                $longestCommand = strlen($key);
+        }, ARRAY_FILTER_USE_BOTH);
 
         $displayArray = [];
-        foreach ($commands as $command) {
-            $displayArray[] = "\e[32m{$command['title']}\e[0m";
 
-            if (strlen($command['title']) == $longestCommand) {
+        array_filter($commands, function (array $command, string $key) use (&$longestCommand, &$displayArray) {
+            $displayArray[] = "\e[32m{$key}\e[0m";
+
+            if (strlen($key) == $longestCommand) {
                 $displayArray[] = "\t";
             } else {
-                for ($i = 0; $i < ($longestCommand - strlen($command['title'])); $i++) {
+                for ($i = 0; $i < ($longestCommand - strlen($key)); $i++) {
                     $displayArray[] = " ";
                 }
                 $displayArray[] = "\t";
             }
 
             $displayArray[] = "- \e[1m{$command['description']}\e[0m\n";
-        }
+        }, ARRAY_FILTER_USE_BOTH);
 
         echo implode('', $displayArray);
+    }
+
+    /**
+     * Handle a `--help` flag on specific command
+     * @param  array  $command
+     * 
+     * @return void
+     */
+    protected function commandHelpDisplayHandler(array $meta, string $name): void
+    {
+        if (!is_null($this->commandHelpDisplay)) {
+            call_user_func($this->commandHelpDisplay, $meta, $name);
+            return;
+        }
+
+        $reflectionFunction = new ReflectionFunction($meta['action']);
+        $reflectionParam = $reflectionFunction->getParameters();
+        $param = $this->getFunctionArgumments($reflectionParam);
+
+        echo "\n";
+        echo "\e[32mphp\e[0m \e[32m{$this->fileName}\e[0m \e[1;33m{$name} \e[0;33m<flag|arguments>\e[0m\n";
+
+        echo "\e[1m{$meta['description']}\e[0m\n\n";
+        echo "\e[33mArgumments : \e[0m\n";
+
+        $longestCommand = 0;
+        array_filter($param, function (string $argumments) use (&$longestCommand) {
+            if (strlen($argumments) > $longestCommand)
+                $longestCommand = strlen($argumments);
+        });
+
+        $displayArray = [];
+
+        array_filter($param, function (string $key, string $argumments) use (&$longestCommand, &$displayArray) {
+            $displayArray[] = "\e[32m{$argumments}\e[0m";
+
+            if (strlen($argumments) == $longestCommand) {
+                $displayArray[] = "\t";
+            } else {
+                for ($i = 0; $i < ($longestCommand - strlen($argumments)); $i++) {
+                    $displayArray[] = " ";
+                }
+                $displayArray[] = "\t";
+            }
+
+            $displayArray[] = "- \e[1m{$key}\e[0m\n";
+        }, ARRAY_FILTER_USE_BOTH);
+
+        echo implode('', $displayArray) . "\n";
+
+        echo "\e[33mFlag : \e[0m\n";
+
+        $longestCommand = 0;
+        array_filter($meta['flag'], function (array $flag, string $key) use (&$longestCommand) {
+            if (strlen($key) > $longestCommand)
+                $longestCommand = strlen($key);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $displayArray = [];
+
+        array_filter($meta['flag'], function (array $flag, string $key) use (&$longestCommand, &$displayArray) {
+            $displayArray[] = "\e[32m{$key}\e[0m";
+
+            if (strlen($key) == $longestCommand) {
+                $displayArray[] = "\t";
+            } else {
+                for ($i = 0; $i < ($longestCommand - strlen($key)); $i++) {
+                    $displayArray[] = " ";
+                }
+                $displayArray[] = "\t";
+            }
+
+            $displayArray[] = "- \e[1m{$flag['description']}\e[0m\n";
+        }, ARRAY_FILTER_USE_BOTH);
+
+        echo implode('', $displayArray);
+
+        return;
+    }
+
+    // Console Logic
+
+    /**
+     * Parse the passed user input
+     * @param  array $argumments
+
+     * @return array
+     */
+    protected function parseUserInput(array $in): array
+    {
+        $out = [
+            'command' => NULL,
+            'argumments' => [],
+            'flag' => [],
+        ];
+
+        $this->fileName = $in[0];
+
+        if (count($in) > 1) {
+            $out['command'] = $in[1];
+            $in = array_slice($in, 2);
+        }
+
+        if (count($in) >= 1) {
+            array_map(function ($param) use (&$out) {
+                if (is_int(strpos($param, "="))) {
+                    $parsed = explode("=", $param);
+                    $out['argumments'][$parsed[0]] = $parsed[1];
+                } else if (count(explode('--', $param)) >= 2) {
+                    $parsed = explode("--", $param);
+                    $out['flag'][] = $parsed[1];
+                } else if (count(explode('-', $param)) >= 2) {
+                    $parsed = explode("-", $param);
+                    $out['flag'][] = $parsed[1];
+                } else {
+                    $out['argumments'][] = $param;
+                }
+            }, $in);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Console action call
+     * @param  array $argumments
+     * 
+     * @return mixed
+     */
+    protected function call(array $input): mixed
+    {
+        $this->checkInputCommandExist($input);
+
+        if (array_search('help', $input['flag']) >= 0 || array_search('h', $input['flag'])) {
+            return $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
+        }
+
+
+        $commandFunction = $this->commands[$input['command']]['action'];
+
+        $flagActionQueue = $this->filterFlagInput($input, $commandFunction);
+
+        if (!$this->isArgummentsSatisfied($commandFunction, count($input['argumments']))) {
+            echo "Too little argumments\n";
+            return null;
+        }
+
+        $out = call_user_func($commandFunction, ...$input['argumments']);
+
+        array_map(function (Closure $action) {
+            call_user_func($action);
+        }, $flagActionQueue);
+
+        return $out;
+    }
+
+    /**
+     * Predict the user input command if the input doesn't make any sense
+     * @param  string $inputCommand
+     * 
+     * @return string
+     */
+    protected function predictCommand(string $inputCommand): string
+    {
+        $probabilityCommand = [];
+
+        array_filter($this->commands, function (array $command, string $key) use (&$probabilityCommand, $inputCommand) {
+            $percentage = 0;
+            similar_text($inputCommand, $key, $percentage);
+            $probabilityCommand[] = ['percentage' => $percentage, 'command' => $key];
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $percentage = 0.0;
+        $outCommand = '';
+
+        foreach ($probabilityCommand as $command) {
+            if ($command['percentage'] >= $percentage) {
+                $percentage = $command['percentage'];
+                $outCommand = $command['command'];
+            }
+        }
+
+        if ($outCommand != '')
+            return $outCommand;
+
+        echo "Invalid command!";
+        exit(0);
+    }
+
+    /**
+     * Get the argumments name and type
+     * @param  array<\ReflectionParameter> $argumments
+     * 
+     * @return array
+     */
+    protected function getFunctionArgumments(array $argumments): array
+    {
+        $argummentsList = [];
+
+        foreach ($argumments as $argumment) {
+            $argummentsList[$argumment->getName()] = (string) $argumment->getType();
+        }
+
+        return $argummentsList;
+    }
+
+    /**
+     * Check the passed string if exist in command list if it doesn't exist trigger `predictCommand` method
+     * @param string $command
+     * 
+     * @return void
+     */
+    protected function checkInputCommandExist(array &$input): void
+    {
+        if (!array_key_exists($input['command'], $this->commands)) {
+            $input['command'] = $this->predictCommand($input['command']);
+
+            echo "\n";
+
+            $result = $this->confirmationHandler($this->predictCommand($input['command']));
+
+            echo "\n";
+            if (!$result) {
+                echo "Invalid Command";
+            }
+        }
+    }
+
+    /**
+     * Check if the passed argumments count satisfy the passed closure
+     * @param  Closure  $action
+     * @param  int      $argummentsCurrentlyPassed
+     * 
+     * @return bool
+     */
+    protected function isArgummentsSatisfied(Closure $action, int $argummentsCurrentlyPassed): bool
+    {
+        $reflectionFunction = new ReflectionFunction($action);
+        $reflectionParam = $reflectionFunction->getParameters();
+        $param = $this->getFunctionArgumments($reflectionParam);
+
+        if (count($param) > $argummentsCurrentlyPassed) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Filter the passed flag in input and run specific type of the flag and return queued flag
+     * @param  array   $input
+     * @param  Closure $commandFunction
+     * 
+     * @return array
+     */
+    protected function filterFlagInput(array &$input, Closure &$commandFunction): array
+    {
+        $flagActionQueue = [];
+
+        array_filter($input['flag'], function (string $flag) use (&$input, &$commandFunction, &$flagActionQueue) {
+            if (array_key_exists($flag, $this->commands[$input['command']]['flag'])) {
+                switch ($this->commands[$input['command']]['flag'][$flag]['type']) {
+                    case self::FLAG_BEFORE:
+                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action']);
+                        break;
+                    case self::FLAG_OVERIDE:
+                        $commandFunction = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                    case self::FLAG_AFTER:
+                        $flagActionQueue[] = $this->commands[$input['command']]['flag'][$flag]['action'];
+                        break;
+                }
+            }
+        });
+
+        return $flagActionQueue;
     }
 }
