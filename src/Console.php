@@ -5,6 +5,9 @@ namespace UnknownRori\Console;
 use Closure;
 use ReflectionFunction;
 
+/**
+ * Helper class to simplify cli development
+ */
 class Console
 {
     // Run the flag action before the command is triggered

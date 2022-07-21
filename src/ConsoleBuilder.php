@@ -2,10 +2,20 @@
 
 namespace UnknownRori\Console;
 
+/**
+ * Builder class for initialize \UnknownRori\Console\Console
+ */
 class ConsoleBuilder
 {
     private Console $console;
 
+    /**
+     * Initialize Console object
+     * @param  string  $name
+     * @param  string  $description
+     * 
+     * @return void
+     */
     public function __construct(string $name, string $description)
     {
         $this->console = new Console();
@@ -13,11 +23,21 @@ class ConsoleBuilder
         $this->console->appDescription = $description;
     }
 
+    /**
+     * Return a console object
+     * @return \UnknownRori\Console\Console
+     */
     public function getConsole(): Console
     {
         return $this->console;
     }
 
+    /**
+     * Add command using CommandBuilder
+     * @param  \UnknownRori\Console\CommandBuilder $commandBuilder
+     * 
+     * @return void
+     */
     public function addCommand(CommandBuilder $commandBuilder): void
     {
         $this->console->addCommand(
