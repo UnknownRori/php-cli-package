@@ -320,7 +320,7 @@ class Console
         $displayArray = [];
 
         array_filter($meta['flag'], function (array $flag, string $key) use (&$longestCommand, &$displayArray) {
-            $displayArray[] = "\e[32m{$key}\e[0m";
+            $displayArray[] = "\e[32m--{$key}\e[0m";
 
             if (strlen($key) == $longestCommand) {
                 $displayArray[] = "\t";
