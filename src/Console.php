@@ -102,6 +102,7 @@ class Console
             'description' => $description,
             'action' => $callback,
             'flag' => [],
+            'aliasFlag' => []
         ];
     }
 
@@ -391,7 +392,7 @@ class Console
     {
         $this->checkInputCommandExist($input);
 
-        if (array_search('help', $input['flag']) > 0 || array_search('h', $input['flag']) > 0) {
+        if (in_array('help', $input['flag']) || in_array('h', $input['flag'])) {
             return $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
         }
 
