@@ -391,7 +391,7 @@ class Console
     {
         $this->checkInputCommandExist($input);
 
-        if (array_search('help', $input['flag']) >= 0 || array_search('h', $input['flag'])) {
+        if (array_search('help', $input['flag']) > 0 || array_search('h', $input['flag']) > 0) {
             return $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
         }
 
