@@ -408,8 +408,8 @@ class Console
 
         $out = call_user_func($commandFunction, ...$input['argumments']);
 
-        array_map(function (Closure $action) {
-            call_user_func($action);
+        array_map(function (Closure $action) use (&$input) {
+            call_user_func($action, ...$input['argumments']);
         }, $flagActionQueue);
 
         return $out;
@@ -522,7 +522,7 @@ class Console
             if (array_key_exists($flag, $this->commands[$input['command']]['flag'])) {
                 switch ($this->commands[$input['command']]['flag'][$flag]['type']) {
                     case self::FLAG_BEFORE:
-                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action']);
+                        call_user_func($this->commands[$input['command']]['flag'][$flag]['action'], ...$input['argumments']);
                         break;
                     case self::FLAG_OVERIDE:
                         $commandFunction = $this->commands[$input['command']]['flag'][$flag]['action'];
