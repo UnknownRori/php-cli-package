@@ -76,6 +76,9 @@ class ConsoleTest extends TestCase
         $this->assertEquals("Hello, World!", $result);
     }
 
+    /**
+     * @test
+     */
     public function second_string_concat_command()
     {
         $app = new Console();
@@ -85,5 +88,29 @@ class ConsoleTest extends TestCase
 
         $result = $app->serve('index.php concat b=World! a=Hello,');
         $this->assertEquals("Hello, World!", $result);
+    }
+
+    /**
+     * @test
+     */
+    public function flag_overide_command()
+    {
+        $app = new Console();
+        $app->addCommand('sum', 'It should be overidden by flag', function (float $a, float $b) {
+            return $a + $b;
+        });
+
+        $app->addFlag('sum', 'test', 'It hould ovveriden the command', Console::FLAG_OVERIDE, function () {
+            return "Hello, World!";
+        });
+
+        $result = $app->serve('index.php sum 1 1 --test');
+        $this->assertEquals('Hello, World!', $result);
+
+        $result = $app->serve('index.php sum --test 1 1');
+        $this->assertEquals('Hello, World!', $result);
+
+        $result = $app->serve('index.php sum --test');
+        $this->assertEquals('Hello, World!', $result);
     }
 }

@@ -3,8 +3,19 @@
 namespace UnknownRori\Console\Tests;
 
 use PHPUnit\Framework\TestCase;
+use UnknownRori\Console\ConsoleBuilder;
 
-class ConsoleBuilder extends TestCase
+/**
+ * @covers \UnknownRori\Console\ConsoleBuilder
+ */
+class ConsoleBuilderTest extends TestCase
 {
-    //
+    /**
+     * @test
+     */
+    public function console_builder_init()
+    {
+        $app = new ConsoleBuilder('Test app', 'Test app');
+        $this->assertInstanceOf(ConsoleBuilder::class, $app);
+    }
 }
