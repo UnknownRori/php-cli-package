@@ -390,11 +390,14 @@ class Console
      */
     protected function call(array $input): mixed
     {
-        $this->checkInputCommandExist($input);
-
         if (in_array('help', $input['flag']) || in_array('h', $input['flag'])) {
             return $this->commandHelpDisplayHandler($this->commands[$input['command']], $input['command']);
+        } else if ($input['command'] == '--help') {
+            return $this->commandDisplayHandler($this->commands);
         }
+
+        if (!$this->checkInputCommandExist($input))
+            return null;
 
 
         $commandFunction = $this->commands[$input['command']]['action'];
@@ -471,7 +474,7 @@ class Console
      * 
      * @return void
      */
-    protected function checkInputCommandExist(array &$input): void
+    protected function checkInputCommandExist(array &$input): bool
     {
         if (!array_key_exists($input['command'], $this->commands)) {
             $input['command'] = $this->predictCommand($input['command']);
@@ -483,8 +486,13 @@ class Console
             echo "\n";
             if (!$result) {
                 echo "Invalid Command";
+                return false;
             }
+
+            return true;
         }
+
+        return true;
     }
 
     /**

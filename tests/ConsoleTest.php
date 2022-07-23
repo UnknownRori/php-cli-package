@@ -113,4 +113,18 @@ class ConsoleTest extends TestCase
         $result = $app->serve('index.php sum --test');
         $this->assertEquals('Hello, World!', $result);
     }
+
+    /**
+     * @test
+     */
+    public function check_default_help_flag()
+    {
+        $app = new Console();
+        $app->addCommand('concat', 'it should concatenate a string', function (string $a, string $b) {
+            return "{$a} {$b}";
+        });
+
+        $result = $app->serve('index.php --help');
+        $this->assertEquals(null, $result);
+    }
 }
