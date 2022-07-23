@@ -43,6 +43,7 @@ class Console
 
     // app status if already title display
     protected bool $isAlreadyDisplayTitle = false;
+    protected bool $isAlreadyDisplayTopHeader = false;
 
     /**
      * Set the display header using passed function
@@ -203,6 +204,11 @@ class Console
     {
         $this->titleDisplayHandler();
 
+        if ($this->isAlreadyDisplayTopHeader)
+            return;
+
+        $this->isAlreadyDisplayTopHeader = true;
+
         if (is_null($this->topHeader)) {
             echo "{$this->appDescription}\n\n";
             echo "\e[1;32mphp\e[0m \e[1;32m{$this->fileName}\e[0m \e[33m<command> <flag|arguments>\e[0m\n";
@@ -223,6 +229,8 @@ class Console
      */
     protected function commandDisplayHandler(array $commands): void
     {
+        $this->topHeaderHandler();
+
         if (!is_null($this->commandDisplay)) {
             call_user_func($this->commandDisplay, $this->commands);
             return;
