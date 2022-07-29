@@ -306,7 +306,7 @@ class Console
             if (strlen($argumments) == $longestCommand) {
                 $displayArray[] = "\t";
             } else {
-                for ($i = 0; $i < ($longestCommand - strlen($argumments)); $i++) {
+                for ($i = 0; $i < ($longestCommand - strlen($argumments)) + 1; $i++) {
                     $displayArray[] = " ";
                 }
                 $displayArray[] = "\t";
